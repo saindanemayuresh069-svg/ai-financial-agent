@@ -1,37 +1,4 @@
-import streamlit as st
-import pandas as pd
-from analysis import calculate_ratios, calculate_score, detect_red_flags
-from ai_report import generate_report
+company = st.text_input("Enter Company Name (e.g., HDFC Bank)")
 
-st.title("📊 AI Financial Analyst")
-
-uploaded_file = st.file_uploader("Upload Excel File", type=["xlsx"])
-
-if uploaded_file is not None:
-    df = pd.read_excel(uploaded_file)
-
-    st.write("### Raw Data")
-    st.write(df)
-
-    st.write("### Columns in your file:")
-    st.write(list(df.columns))
-
-    try:
-        ratios = calculate_ratios(df)
-        score = calculate_score(ratios)
-        flags = detect_red_flags(ratios)
-
-        st.write("### 📈 Ratios", ratios)
-        st.write("### ⭐ Score:", score)
-        st.write("### ⚠️ Red Flags:", flags)
-
-        if st.button("Generate AI Report"):
-            report = generate_report(ratios, score, flags)
-            st.write("### 🤖 AI Report")
-            st.write(report)
-
-    except Exception as e:
-        st.error(f"Error: {e}")
-
-else:
-    st.info("Please upload an Excel file to continue")
+if company:
+    st.write(f"Fetching data for {company}...")
