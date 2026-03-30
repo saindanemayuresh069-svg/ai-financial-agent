@@ -1,3 +1,14 @@
+def calculate_ratios(df):
+
+    # 🔒 Safety check
+    if df is None or df.empty:
+        raise ValueError("Excel file is empty or not readable")
+
+    if len(df) < 2:
+        raise ValueError("Need at least 2 rows (years) for analysis")
+
+    latest = df.iloc[-1]
+    first = df.iloc[0]
 def get_col(df, possible_names):
     for col in df.columns:
         if col.lower() in [name.lower() for name in possible_names]:
