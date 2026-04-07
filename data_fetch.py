@@ -13,29 +13,32 @@ TICKER_MAP = {
 
 def get_financial_data(company):
 
-    ticker_symbol = TICKER_MAP.get(company.lower())
+    ticker = TICKER_MAP.get(company.lower())
 
-    if not ticker_symbol:
+    if not ticker:
         return pd.DataFrame()
 
-    stock = yf.Ticker(ticker_symbol)
+    stock = yf.Ticker(ticker)
 
     try:
-        financials = stock.financials.T
-        balance = stock.balance_sheet.T
-        cashflow = stock.cashflow.T
+        fin = stock.financials.T
+        bal = stock.balance_sheet.T
+        cf = stock.cashflow.T
 
         df = pd.DataFrame({
-            "Year": financials.index.year,
-            "Revenue": financials["Total Revenue"],
-            "Net Profit": financials["Net Income"],
-            "EBIT": financials.get("Ebit", 0),
-            "Debt": balance.get("Total Debt", 0),
-            "Equity": balance.get("Total Stockholder Equity", 0),
-            "OCF": cashflow.get("Total Cash From Operating Activities", 0)
+            "Year": fin.index.year,
+            "Revenue": fin.get("Total Revenue"),
+            "Net Profit": fin.get("Net Income"),
+            "EBIT": fin.get("Operating Income"),   # ✅ FIXED
+            "Debt": bal.get("Total Debt"),
+            "Equity": bal.get("Total Stockholder Equity"),
+            "OCF": cf.get("Operating Cash Flow")   # ✅ FIXED
         })
 
-        return df.dropna()
+        df = df.fillna(0)
 
-    except:
+        return df.sort_values("Year")
+
+    except Exception as e:
+        print("Financial error:", e)
         return pd.DataFrame()
