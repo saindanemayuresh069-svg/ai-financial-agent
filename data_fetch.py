@@ -1,15 +1,39 @@
+import yfinance as yf
 import pandas as pd
 
-def get_sample_data(company):
-    # Demo data (later we connect real API)
-    data = {
-        "Year": [2019, 2020, 2021, 2022, 2023],
-        "Revenue": [100, 120, 150, 180, 220],
-        "Net Profit": [20, 25, 35, 45, 60],
-        "Debt": [50, 55, 60, 65, 70],
-        "Equity": [80, 85, 90, 100, 120],
-        "EBIT": [30, 40, 50, 65, 80],
-        "OCF": [18, 22, 30, 40, 55]
-    }
+def get_financial_data(company):
 
-    return pd.DataFrame(data)
+    # Try India first
+    ticker = company.upper().replace(" ", "") + ".NS"
+
+    stock = yf.Ticker(ticker)
+
+    try:
+        financials = stock.financials
+
+        if financials.empty:
+            raise Exception
+
+    except:
+        # fallback US ticker
+        ticker = company.upper()
+        stock = yf.Ticker(ticker)
+        financials = stock.financials
+
+    balance = stock.balance_sheet
+    cashflow = stock.cashflow
+
+    df = pd.DataFrame({
+        "Year": financials.columns,
+        "Revenue": financials.loc["Total Revenue"],
+        "Net Profit": financials.loc["Net Income"],
+        "EBIT": financials.loc["EBIT"],
+        "Debt": balance.loc["Total Debt"],
+        "Equity": balance.loc["Total Stockholder Equity"],
+        "OCF": cashflow.loc["Total Cash From Operating Activities"]
+    })
+
+    df = df.dropna()
+    df["Year"] = df["Year"].dt.year
+
+    return df.sort_values("Year")
