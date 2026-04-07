@@ -12,12 +12,14 @@ def safe_get(df, keys):
 def get_financial_data(company):
 
     ticker = company.upper().replace(" ", "") + ".NS"
-    stock = yf.Ticker(ticker)
 
     try:
+        stock = yf.Ticker(ticker)
         financials = stock.financials
+
         if financials.empty:
             raise Exception
+
     except:
         ticker = company.upper()
         stock = yf.Ticker(ticker)
