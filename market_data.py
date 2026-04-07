@@ -20,43 +20,46 @@ TICKER_MAP = {
 
 def get_market_data(company):
 
-    ticker = TICKER_MAP.get(company.lower())
+    company_lower = company.lower().strip()
+
+    # 🔥 STEP 1: FIX TICKER
+    ticker = TICKER_MAP.get(company_lower)
 
     if not ticker:
-        ticker = company.upper().replace(" ", "") + ".NS"
+        ticker = company_upper = company.upper().replace(" ", "")
+    
+    # 🔍 DEBUG
+    print("Using ticker:", ticker)
 
-    # 🔹 TRY YAHOO FIRST
-    try:
-        stock = yf.Ticker(ticker)
-        hist = stock.history(period="1d")
-
-        if not hist.empty:
-            price = hist["Close"].iloc[-1]
-            market_cap = stock.info.get("marketCap", 0)
-
-            return {
-                "price": float(price),
-                "market_cap": float(market_cap)
-            }
-
-    except:
-        pass
-
-    # 🔹 FALLBACK (FREE API - VERY STABLE)
+    # 🔹 TRY DIRECT API FIRST (MORE RELIABLE)
     try:
         url = f"https://query1.finance.yahoo.com/v7/finance/quote?symbols={ticker}"
         res = requests.get(url)
         data = res.json()
 
-        result = data["quoteResponse"]["result"][0]
+        result = data["quoteResponse"]["result"]
 
-        return {
-            "price": result.get("regularMarketPrice", 0),
-            "market_cap": result.get("marketCap", 0)
-        }
+        if result:
+            return {
+                "price": result[0].get("regularMarketPrice", 0),
+                "market_cap": result[0].get("marketCap", 0)
+            }
 
-    except:
-        return {
-            "price": 0,
-            "market_cap": 0
-        }
+    except Exception as e:
+        print("API error:", e)
+
+    # 🔹 FALLBACK TO YFINANCE
+    try:
+        stock = yf.Ticker(ticker)
+        hist = stock.history(period="1d")
+
+        if not hist.empty:
+            return {
+                "price": float(hist["Close"].iloc[-1]),
+                "market_cap": float(stock.info.get("marketCap", 0))
+            }
+
+    except Exception as e:
+        print("yfinance error:", e)
+
+    return {"price": 0, "market_cap": 0}
