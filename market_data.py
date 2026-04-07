@@ -15,10 +15,7 @@ TICKER_MAP = {
     "amazon": "AMZN"
 }
 
-
 def get_market_data(company):
-
-    company = company.lower().strip()
     ticker = TICKER_MAP.get(company)
 
     if not ticker:
@@ -26,8 +23,7 @@ def get_market_data(company):
 
     try:
         url = f"https://query1.finance.yahoo.com/v7/finance/quote?symbols={ticker}"
-        res = requests.get(url, timeout=5)
-        data = res.json()
+        data = requests.get(url).json()
 
         result = data.get("quoteResponse", {}).get("result", [])
 
@@ -39,6 +35,5 @@ def get_market_data(company):
             "market_cap": result[0].get("marketCap", 0)
         }
 
-    except Exception as e:
-        print("Market API error:", e)
+    except:
         return {"price": 0, "market_cap": 0}
