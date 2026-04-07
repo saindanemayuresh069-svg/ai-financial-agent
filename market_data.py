@@ -13,29 +13,26 @@ SYMBOL_MAP = {
 }
 
 def get_market_data(company):
-
     symbol = SYMBOL_MAP.get(company.lower())
 
     if not symbol:
         return {"price": 0, "market_cap": 0}
 
+    # ✅ Alpha Vantage Price
     try:
         url = f"https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol={symbol}&apikey={API_KEY}"
         response = requests.get(url).json()
 
         price = float(response["Global Quote"]["05. price"])
-
     except:
         price = 0
 
-    # ✅ fallback using yfinance
+    # ✅ Yahoo Finance Market Cap
     try:
         yf_symbol = symbol.replace(".BSE", ".NS")
         stock = yf.Ticker(yf_symbol)
         info = stock.info
-
         market_cap = info.get("marketCap", 0)
-
     except:
         market_cap = 0
 
