@@ -35,5 +35,6 @@ def get_financial_data(company):
 
     df = df.dropna()
     df["Year"] = df["Year"].dt.year
+    df = df.tail(5)  # latest 5 years only
 
     return df.sort_values("Year")
