@@ -53,9 +53,6 @@ if company:
         try:
             market = get_market_data(company)
 
-            # 🔍 DEBUG (REMOVE AFTER WORKING)
-            st.write("DEBUG MARKET:", market)
-
             price = market.get("price", 0)
             market_cap = market.get("market_cap", 0)
 
