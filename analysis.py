@@ -1,29 +1,25 @@
 def calculate_ratios(df):
 
-    first = df.iloc[0]
-    last = df.iloc[-1]
+    if df.empty:
+        return {"cagr": 0, "roe": 0}
 
-    cagr = ((last["Revenue"] / first["Revenue"]) ** (1/3)) - 1 if first["Revenue"] else 0
-    roe = last["Net Profit"] / last["Equity"] if last["Equity"] else 0
+    first = df.iloc[0]["Revenue"]
+    last = df.iloc[-1]["Revenue"]
 
-    return {"cagr": cagr, "roe": roe}
+    cagr = ((last / first) ** (1/len(df))) - 1 if first else 0
+    roe = (df.iloc[-1]["Net Profit"] / df.iloc[-1]["Equity"]) if df.iloc[-1]["Equity"] else 0
+
+    return {"cagr": cagr * 100, "roe": roe * 100}
 
 
 def calculate_score(ratios):
     score = 0
-
-    if ratios["cagr"] > 0.15:
+    if ratios["cagr"] > 10:
         score += 2
-    if ratios["roe"] > 0.15:
+    if ratios["roe"] > 15:
         score += 2
-
     return score
 
 
-def detect_red_flags(ratios):
-    flags = []
-
-    if ratios["roe"] < 0.1:
-        flags.append("Low profitability")
-
-    return flags
+def detect_red_flags(df):
+    return []
