@@ -1,6 +1,4 @@
-import yfinance as yf
 import requests
-
 
 TICKER_MAP = {
     "hdfc bank": "HDFCBANK.NS",
@@ -20,46 +18,27 @@ TICKER_MAP = {
 
 def get_market_data(company):
 
-    company_lower = company.lower().strip()
-
-    # 🔥 STEP 1: FIX TICKER
-    ticker = TICKER_MAP.get(company_lower)
+    company = company.lower().strip()
+    ticker = TICKER_MAP.get(company)
 
     if not ticker:
-        ticker = company_upper = company.upper().replace(" ", "")
-    
-    # 🔍 DEBUG
-    print("Using ticker:", ticker)
+        return {"price": 0, "market_cap": 0}
 
-    # 🔹 TRY DIRECT API FIRST (MORE RELIABLE)
     try:
         url = f"https://query1.finance.yahoo.com/v7/finance/quote?symbols={ticker}"
-        res = requests.get(url)
+        res = requests.get(url, timeout=5)
         data = res.json()
 
-        result = data["quoteResponse"]["result"]
+        result = data.get("quoteResponse", {}).get("result", [])
 
-        if result:
-            return {
-                "price": result[0].get("regularMarketPrice", 0),
-                "market_cap": result[0].get("marketCap", 0)
-            }
+        if not result:
+            return {"price": 0, "market_cap": 0}
 
-    except Exception as e:
-        print("API error:", e)
-
-    # 🔹 FALLBACK TO YFINANCE
-    try:
-        stock = yf.Ticker(ticker)
-        hist = stock.history(period="1d")
-
-        if not hist.empty:
-            return {
-                "price": float(hist["Close"].iloc[-1]),
-                "market_cap": float(stock.info.get("marketCap", 0))
-            }
+        return {
+            "price": result[0].get("regularMarketPrice", 0),
+            "market_cap": result[0].get("marketCap", 0)
+        }
 
     except Exception as e:
-        print("yfinance error:", e)
-
-    return {"price": 0, "market_cap": 0}
+        print("Market API error:", e)
+        return {"price": 0, "market_cap": 0}
