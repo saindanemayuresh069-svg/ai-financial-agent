@@ -15,7 +15,7 @@ TICKER_MAP = {
     "amazon": "AMZN"
 }
 
-FMP_API_KEY = "YOUR_API_KEY_HERE"
+FMP_API_KEY = "v5IIHUYVDu8Zme5v7RkKj9bx4Fst"
 
 
 def get_market_data(company):
