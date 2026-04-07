@@ -1,21 +1,23 @@
-import yfinance as yf
-import pandas as pd
+def safe_get(df, key_list):
+    for key in key_list:
+        if key in df.index:
+            return df.loc[key]
+    return None
+
 
 def get_financial_data(company):
 
-    # Try India first
-    ticker = company.upper().replace(" ", "") + ".NS"
+    import yfinance as yf
+    import pandas as pd
 
+    ticker = company.upper().replace(" ", "") + ".NS"
     stock = yf.Ticker(ticker)
 
     try:
         financials = stock.financials
-
         if financials.empty:
             raise Exception
-
     except:
-        # fallback US ticker
         ticker = company.upper()
         stock = yf.Ticker(ticker)
         financials = stock.financials
@@ -23,18 +25,24 @@ def get_financial_data(company):
     balance = stock.balance_sheet
     cashflow = stock.cashflow
 
+    revenue = safe_get(financials, ["Total Revenue"])
+    profit = safe_get(financials, ["Net Income"])
+    ebit = safe_get(financials, ["EBIT", "Operating Income"])  # 🔥 FIX
+    debt = safe_get(balance, ["Total Debt"])
+    equity = safe_get(balance, ["Total Stockholder Equity"])
+    ocf = safe_get(cashflow, ["Total Cash From Operating Activities"])
+
     df = pd.DataFrame({
         "Year": financials.columns,
-        "Revenue": financials.loc["Total Revenue"],
-        "Net Profit": financials.loc["Net Income"],
-        "EBIT": financials.loc["EBIT"],
-        "Debt": balance.loc["Total Debt"],
-        "Equity": balance.loc["Total Stockholder Equity"],
-        "OCF": cashflow.loc["Total Cash From Operating Activities"]
+        "Revenue": revenue,
+        "Net Profit": profit,
+        "EBIT": ebit if ebit is not None else 0,   # 🔥 IMPORTANT
+        "Debt": debt if debt is not None else 0,
+        "Equity": equity if equity is not None else 1,
+        "OCF": ocf if ocf is not None else 0
     })
 
     df = df.dropna()
     df["Year"] = df["Year"].dt.year
-    df = df.tail(5)  # latest 5 years only
 
-    return df.sort_values("Year")
+    return df.sort_values("Year").tail(5)
