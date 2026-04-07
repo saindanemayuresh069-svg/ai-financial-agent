@@ -9,11 +9,20 @@ st.set_page_config(page_title="AI Financial Analyst", layout="wide")
 
 st.title("📊 AI Financial Analyst PRO")
 
+# 🔹 Input
 company = st.text_input("Enter Company Name (e.g., HDFC Bank, SBI, Apple)")
 
 if company:
     try:
+        # Normalize input
+        company = company.lower().strip()
+
+        # 📊 Financial Data
         df = get_financial_data(company)
+
+        if df is None or df.empty:
+            st.error("No financial data found for this company")
+            st.stop()
 
         st.subheader("📊 Financial Data")
         st.dataframe(df)
@@ -36,17 +45,30 @@ if company:
 
         # 💰 DCF
         dcf_value = calculate_dcf(df)
+
         st.subheader("💰 Intrinsic Value (DCF)")
         st.metric("Estimated Value", f"{dcf_value:,.0f}")
 
         # 📈 Market Data
-        market = get_market_data(company)
-        price = market["price"]
-        market_cap = market["market_cap"]
+        try:
+            market = get_market_data(company)
 
+            # 🔍 DEBUG (REMOVE AFTER WORKING)
+            st.write("DEBUG MARKET:", market)
+
+            price = market.get("price", 0)
+            market_cap = market.get("market_cap", 0)
+
+        except Exception as e:
+            st.warning(f"Market data error: {e}")
+            price = 0
+            market_cap = 0
+
+        # 📊 Market Display
         st.subheader("📊 Market Data")
 
         c1, c2, c3 = st.columns(3)
+
         c1.metric("Stock Price", f"{price:,.2f}")
         c2.metric("Market Cap", f"{market_cap:,.0f}")
 
@@ -69,18 +91,18 @@ if company:
         st.subheader("📌 Investment Verdict")
         st.write(verdict)
 
-        # ⚠️ Risk
+        # ⚠️ Risk Flags
         st.subheader("⚠️ Risk Flags")
         st.write(flags if flags else "No major risks detected")
 
         # 🤖 AI Report
         if st.button("Generate AI Report"):
             report = generate_report(ratios, score, flags)
-            st.subheader("🤖 AI Report")
+            st.subheader("🤖 AI Investment Report")
             st.write(report)
 
     except Exception as e:
         st.error(f"Error: {e}")
 
 else:
-    st.info("Enter a company name")
+    st.info("Enter a company name to begin analysis")
