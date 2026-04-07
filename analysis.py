@@ -1,41 +1,29 @@
 def calculate_ratios(df):
 
-    latest = df.iloc[-1]
     first = df.iloc[0]
+    last = df.iloc[-1]
 
-    revenue = latest["Revenue"]
-    first_revenue = first["Revenue"]
-    profit = latest["Net Profit"]
-    equity = latest["Equity"]
-    debt = latest["Debt"]
-    ocf = latest["OCF"]
+    cagr = ((last["Revenue"] / first["Revenue"]) ** (1/3)) - 1 if first["Revenue"] else 0
+    roe = last["Net Profit"] / last["Equity"] if last["Equity"] else 0
 
-    cagr = (revenue / first_revenue)**(1/4) - 1 if first_revenue else 0
-    roe = profit / equity if equity else 0
-    de = debt / equity if equity else 0
-    ocf_ratio = ocf / profit if profit else 0
-
-    return {
-        "cagr": cagr,
-        "roe": roe,
-        "de": de,
-        "ocf_ratio": ocf_ratio
-    }
+    return {"cagr": cagr, "roe": roe}
 
 
-def calculate_score(r):
+def calculate_score(ratios):
     score = 0
-    score += 5 if r["cagr"] > 0.15 else 3
-    score += 5 if r["roe"] > 0.2 else 3
-    score += 5 if r["de"] < 1 else 2
-    score += 5 if r["ocf_ratio"] > 1 else 2
-    return round(score / 4, 2)
+
+    if ratios["cagr"] > 0.15:
+        score += 2
+    if ratios["roe"] > 0.15:
+        score += 2
+
+    return score
 
 
-def detect_red_flags(r):
+def detect_red_flags(ratios):
     flags = []
-    if r["de"] > 2:
-        flags.append("High leverage")
-    if r["ocf_ratio"] < 0.8:
-        flags.append("Weak cash flow")
+
+    if ratios["roe"] < 0.1:
+        flags.append("Low profitability")
+
     return flags
