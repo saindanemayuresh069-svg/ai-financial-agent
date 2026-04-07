@@ -1,7 +1,7 @@
 import requests
 import os
 
-API_KEY = os.getenv("FMP_API_KEY")
+API_KEY = os.getenv("v5IIHUYVDu8Zme5v7RkKj9bx4FstI98h")
 
 TICKER_MAP = {
     "hdfc bank": "HDFCBANK.NS",
