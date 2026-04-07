@@ -22,6 +22,20 @@ def get_market_data(company):
         return {"price": 0, "market_cap": 0}
 
     # 🔹 Alpha Vantage
+    # 🔹 fallback for market cap
+try:
+    yf_symbol = symbol.replace(".BSE", ".NS")
+    stock = yf.Ticker(yf_symbol)
+    info = stock.info
+
+    market_cap = info.get("marketCap", 0)
+
+    return {
+        "price": price,
+        "market_cap": market_cap
+    }
+except:
+    pass
     try:
         url = f"https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol={symbol}&apikey={API_KEY}"
         response = requests.get(url).json()
