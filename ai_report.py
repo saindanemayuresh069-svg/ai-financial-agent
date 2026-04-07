@@ -1,29 +1,26 @@
 import os
 from openai import OpenAI
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+api_key = os.getenv("OPENAI_API_KEY")
+client = OpenAI(api_key=api_key) if api_key else None
+
 
 def generate_report(ratios, score, flags):
 
+    if not client:
+        return "⚠️ API key not configured"
+
     prompt = f"""
-You are a professional equity research analyst.
+    Financial Analysis:
 
-Company Analysis:
+    CAGR: {ratios['cagr']:.2f}
+    ROE: {ratios['roe']:.2f}
+    Score: {score}
 
-Growth (CAGR): {ratios['cagr']:.2f}
-ROE: {ratios['roe']:.2f}
-Debt/Equity: {ratios['de']:.2f}
+    Risks: {flags}
 
-Score: {score}/5
-
-Risks: {flags}
-
-Give:
-1. Investment Summary
-2. Strengths
-3. Risks
-4. Final Verdict (Buy/Hold/Sell)
-"""
+    Give short investment recommendation.
+    """
 
     response = client.chat.completions.create(
         model="gpt-4o-mini",
