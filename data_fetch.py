@@ -1,14 +1,15 @@
-def safe_get(df, key_list):
-    for key in key_list:
-        if key in df.index:
+import yfinance as yf
+import pandas as pd
+
+
+def safe_get(df, keys):
+    for key in keys:
+        if df is not None and key in df.index:
             return df.loc[key]
     return None
 
 
 def get_financial_data(company):
-
-    import yfinance as yf
-    import pandas as pd
 
     ticker = company.upper().replace(" ", "") + ".NS"
     stock = yf.Ticker(ticker)
@@ -27,24 +28,25 @@ def get_financial_data(company):
 
     revenue = safe_get(financials, ["Total Revenue"])
     profit = safe_get(financials, ["Net Income"])
-    ebit = safe_get(financials, ["EBIT", "Operating Income"])  # 🔥 FIX
+    ebit = safe_get(financials, ["EBIT", "Operating Income"])
     debt = safe_get(balance, ["Total Debt"])
     equity = safe_get(balance, [
-    "Total Stockholder Equity",
-    "Stockholders Equity",
-    "Total Equity Gross Minority Interest"
-])
-   ocf = safe_get(cashflow, [
-    "Total Cash From Operating Activities",
-    "Operating Cash Flow"
-])
+        "Total Stockholder Equity",
+        "Stockholders Equity",
+        "Total Equity Gross Minority Interest"
+    ])
+    ocf = safe_get(cashflow, [
+        "Total Cash From Operating Activities",
+        "Operating Cash Flow"
+    ])
+
     df = pd.DataFrame({
         "Year": financials.columns,
         "Revenue": revenue,
         "Net Profit": profit,
-        "EBIT": ebit if ebit is not None else 0,   # 🔥 IMPORTANT
+        "EBIT": ebit if ebit is not None else 0,
         "Debt": debt if debt is not None else 0,
-       "Equity": equity if equity is not None else 0
+        "Equity": equity if equity is not None else 0,
         "OCF": ocf if ocf is not None else 0
     })
 
