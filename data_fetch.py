@@ -1,15 +1,41 @@
+import yfinance as yf
 import pandas as pd
+
+TICKER_MAP = {
+    "hdfc bank": "HDFCBANK.NS",
+    "sbi": "SBIN.NS",
+    "reliance": "RELIANCE.NS",
+    "tcs": "TCS.NS",
+    "infosys": "INFY.NS",
+    "icici bank": "ICICIBANK.NS",
+    "apple": "AAPL"
+}
 
 def get_financial_data(company):
 
-    data = {
-        "Year": [2022, 2023, 2024, 2025],
-        "Revenue": [1000, 1200, 1800, 2300],
-        "Net Profit": [400, 500, 620, 700],
-        "EBIT": [500, 600, 800, 900],
-        "Debt": [200, 300, 350, 400],
-        "Equity": [800, 900, 1100, 1300],
-        "OCF": [300, 400, 500, 600]
-    }
+    ticker_symbol = TICKER_MAP.get(company.lower())
 
-    return pd.DataFrame(data)
+    if not ticker_symbol:
+        return pd.DataFrame()
+
+    stock = yf.Ticker(ticker_symbol)
+
+    try:
+        financials = stock.financials.T
+        balance = stock.balance_sheet.T
+        cashflow = stock.cashflow.T
+
+        df = pd.DataFrame({
+            "Year": financials.index.year,
+            "Revenue": financials["Total Revenue"],
+            "Net Profit": financials["Net Income"],
+            "EBIT": financials.get("Ebit", 0),
+            "Debt": balance.get("Total Debt", 0),
+            "Equity": balance.get("Total Stockholder Equity", 0),
+            "OCF": cashflow.get("Total Cash From Operating Activities", 0)
+        })
+
+        return df.dropna()
+
+    except:
+        return pd.DataFrame()
