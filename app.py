@@ -1,9 +1,8 @@
 import streamlit as st
-from analysis import calculate_ratios, calculate_score, detect_red_flags
-from valuation import calculate_dcf
-from ai_report import generate_report
 from data_fetch import get_financial_data
 from market_data import get_market_data
+from analysis import calculate_ratios, calculate_score
+from valuation import calculate_dcf
 
 st.set_page_config(page_title="AI Financial Analyst PRO", layout="wide")
 
@@ -12,78 +11,45 @@ st.title("📊 AI Financial Analyst PRO")
 company = st.text_input("Enter Company Name (e.g., HDFC Bank, SBI, Apple)")
 
 if company:
+
     try:
-        company = company.lower().strip()
-
-        # 📊 Financial Data
         df = get_financial_data(company)
+        market = get_market_data(company)
 
-        if df is None or df.empty:
-            st.error("No financial data found")
-            st.stop()
+    except Exception as e:
+        st.error(f"Error: {e}")
+        df = None
+        market = {"price": 0, "market_cap": 0}
+
+    if df is not None and not df.empty:
 
         st.subheader("📊 Financial Data")
         st.dataframe(df)
 
-        # 📈 Chart
-        st.subheader("📈 Growth Trends")
-        st.line_chart(df.set_index("Year")[["Revenue", "Net Profit"]])
-
-        # 📊 Ratios
         ratios = calculate_ratios(df)
         score = calculate_score(ratios)
-        flags = detect_red_flags(ratios)
+        intrinsic = calculate_dcf(df)
 
-        c1, c2, c3 = st.columns(3)
-        c1.metric("CAGR", f"{ratios['cagr']:.2%}")
-        c2.metric("ROE", f"{ratios['roe']:.2%}")
-        c3.metric("Score", score)
+        st.subheader("📈 Metrics")
+        col1, col2, col3 = st.columns(3)
 
-        # 💰 DCF
-        dcf_value = calculate_dcf(df)
+        col1.metric("CAGR", f"{ratios['cagr']:.2f}%")
+        col2.metric("ROE", f"{ratios['roe']:.2f}%")
+        col3.metric("Score", score)
 
-        st.subheader("💰 Intrinsic Value (DCF)")
-        st.metric("Estimated Value", f"{dcf_value:,.0f}")
-
-        # 📈 Market Data (FIXED)
-        market = get_market_data(company)
-
-        price = market.get("price", 0)
-        market_cap = market.get("market_cap", 0)
+        st.subheader("💰 Intrinsic Value")
+        st.write(f"{intrinsic:,.0f}")
 
         st.subheader("📊 Market Data")
 
-        m1, m2, m3 = st.columns(3)
+        col1, col2, col3 = st.columns(3)
 
-        m1.metric("Stock Price", f"{price:,.2f}")
-        m2.metric("Market Cap", f"{market_cap:,.0f}")
+        price = market["price"]
+        upside = ((intrinsic - price) / price * 100) if price else 0
 
-        upside = ((dcf_value - market_cap) / market_cap * 100) if market_cap else 0
-        m3.metric("Upside %", f"{upside:.2f}%")
+        col1.metric("Stock Price", f"{price}")
+        col2.metric("Market Cap", f"{market['market_cap']}")
+        col3.metric("Upside %", f"{upside:.2f}%")
 
-        # 📌 Verdict
-        if upside > 20:
-            verdict = "🟢 BUY"
-        elif upside > 0:
-            verdict = "🟡 HOLD"
-        else:
-            verdict = "🔴 SELL"
-
-        st.subheader("📌 Investment Verdict")
-        st.write(verdict)
-
-        # ⚠️ Risk
-        st.subheader("⚠️ Risk Flags")
-        st.write(flags if flags else "No major risks detected")
-
-        # 🤖 AI Report
-        if st.button("Generate AI Report"):
-            report = generate_report(ratios, score, flags)
-            st.subheader("AI Report")
-            st.write(report)
-
-    except Exception as e:
-        st.error(f"Error: {e}")
-
-else:
-    st.info("Enter a company name")
+    else:
+        st.warning("No data found")
