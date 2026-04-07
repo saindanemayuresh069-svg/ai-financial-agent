@@ -1,62 +1,51 @@
 import requests
+import streamlit as st
+import yfinance as yf
+
+API_KEY = st.secrets["ALPHA_VANTAGE_API_KEY"]
 
 TICKER_MAP = {
-    "hdfc bank": "HDFCBANK.NS",
-    "sbi": "SBIN.NS",
-    "reliance": "RELIANCE.NS",
-    "tcs": "TCS.NS",
-    "infosys": "INFY.NS",
-    "icici bank": "ICICIBANK.NS",
-
-    "apple": "AAPL",
-    "tesla": "TSLA",
-    "microsoft": "MSFT",
-    "google": "GOOGL",
-    "amazon": "AMZN"
+    "hdfc bank": "HDFCBANK.BSE",
+    "sbi": "SBIN.BSE",
+    "reliance": "RELIANCE.BSE",
+    "tcs": "TCS.BSE",
+    "infosys": "INFY.BSE",
+    "icici bank": "ICICIBANK.BSE",
+    "apple": "AAPL"
 }
-
-FMP_API_KEY = "v5IIHUYVDu8Zme5v7RkKj9bx4Fst"
-
 
 def get_market_data(company):
 
-    company = company.lower().strip()
-    ticker = TICKER_MAP.get(company)
+    symbol = TICKER_MAP.get(company.lower())
 
-    if not ticker:
+    if not symbol:
         return {"price": 0, "market_cap": 0}
 
-    # 🔹 INDIA (Yahoo API)
-    if ticker.endswith(".NS"):
-        try:
-            url = f"https://query1.finance.yahoo.com/v7/finance/quote?symbols={ticker}"
-            headers = {"User-Agent": "Mozilla/5.0"}
+    # 🔹 Alpha Vantage
+    try:
+        url = f"https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol={symbol}&apikey={API_KEY}"
+        response = requests.get(url).json()
 
-            res = requests.get(url, headers=headers, timeout=5).json()
-            result = res.get("quoteResponse", {}).get("result", [])
+        price = float(response["Global Quote"]["05. price"])
 
-            if result:
-                return {
-                    "price": result[0].get("regularMarketPrice", 0),
-                    "market_cap": result[0].get("marketCap", 0)
-                }
+        return {
+            "price": price,
+            "market_cap": 0  # free API limitation
+        }
 
-        except:
-            pass
+    except:
+        pass
 
-    # 🔹 US (FMP API)
-    else:
-        try:
-            url = f"https://financialmodelingprep.com/api/v3/quote/{ticker}?apikey={FMP_API_KEY}"
-            data = requests.get(url).json()
+    # 🔹 Fallback: yfinance
+    try:
+        ticker = symbol.replace(".BSE", ".NS")
+        stock = yf.Ticker(ticker)
+        info = stock.info
 
-            if data:
-                return {
-                    "price": data[0].get("price", 0),
-                    "market_cap": data[0].get("marketCap", 0)
-                }
+        return {
+            "price": info.get("currentPrice", 0),
+            "market_cap": info.get("marketCap", 0)
+        }
 
-        except:
-            pass
-
-    return {"price": 0, "market_cap": 0}
+    except:
+        return {"price": 0, "market_cap": 0}
