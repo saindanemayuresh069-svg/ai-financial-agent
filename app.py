@@ -1,3 +1,4 @@
+from market_data import get_market_data
 import streamlit as st
 from valuation import calculate_dcf
 from analysis import calculate_ratios, calculate_score, detect_red_flags
@@ -12,6 +13,9 @@ company = st.text_input("Enter Company Name (e.g., HDFC Bank)")
 
 if company:
     try:
+        st.write("Fetching market data...")
+market = get_market_data(company)
+st.write(market)
         df = get_financial_data(company)
 
         st.subheader("📊 Financial Data")
