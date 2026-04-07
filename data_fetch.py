@@ -27,18 +27,17 @@ def get_financial_data(company):
 
         df = pd.DataFrame({
             "Year": fin.index.year,
-            "Revenue": fin.get("Total Revenue"),
-            "Net Profit": fin.get("Net Income"),
-            "EBIT": fin.get("Operating Income"),   # ✅ FIXED
-            "Debt": bal.get("Total Debt"),
-            "Equity": bal.get("Total Stockholder Equity"),
-            "OCF": cf.get("Operating Cash Flow")   # ✅ FIXED
+            "Revenue": fin.get("Total Revenue", 0),
+            "Net Profit": fin.get("Net Income", 0),
+            "EBIT": fin.get("Operating Income", 0),
+            "Debt": bal.get("Total Debt", 0),
+            "Equity": bal.get("Total Stockholder Equity", 0),
+            "OCF": cf.get("Operating Cash Flow", 0)
         })
 
         df = df.fillna(0)
-
         return df.sort_values("Year")
 
     except Exception as e:
-        print("Financial error:", e)
+        print("Error:", e)
         return pd.DataFrame()
