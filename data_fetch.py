@@ -29,16 +29,22 @@ def get_financial_data(company):
     profit = safe_get(financials, ["Net Income"])
     ebit = safe_get(financials, ["EBIT", "Operating Income"])  # 🔥 FIX
     debt = safe_get(balance, ["Total Debt"])
-    equity = safe_get(balance, ["Total Stockholder Equity"])
-    ocf = safe_get(cashflow, ["Total Cash From Operating Activities"])
-
+    equity = safe_get(balance, [
+    "Total Stockholder Equity",
+    "Stockholders Equity",
+    "Total Equity Gross Minority Interest"
+])
+   ocf = safe_get(cashflow, [
+    "Total Cash From Operating Activities",
+    "Operating Cash Flow"
+])
     df = pd.DataFrame({
         "Year": financials.columns,
         "Revenue": revenue,
         "Net Profit": profit,
         "EBIT": ebit if ebit is not None else 0,   # 🔥 IMPORTANT
         "Debt": debt if debt is not None else 0,
-        "Equity": equity if equity is not None else 1,
+       "Equity": equity if equity is not None else 0
         "OCF": ocf if ocf is not None else 0
     })
 
